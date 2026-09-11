@@ -1,0 +1,12 @@
+{
+  "name": "hsw-sca-scenario",
+  "version": "1.0.0",
+  "description": "Escenario 01: dependencia con CVE conocido para práctica de SCA",
+  "private": true,
+  "dependencies": {
+    "lodash": "4.17.4"
+  },
+  "scripts": {
+    "audit": "npm audit --audit-level=high"
+  }
+}

@@ -1,0 +1,80 @@
+name: CI — Calidad, Pruebas y Seguridad
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Least Privilege: solo lectura del repositorio para todos los jobs
+permissions:
+  contents: read
+
+jobs:
+
+  # ─── Job 1: Calidad de código ─────────────────────────────────────────────
+  quality:
+    name: Calidad (ESLint)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias (npm ci — determinístico)
+        run: npm ci
+
+      - name: Ejecutar ESLint (Quality Gate)
+        run: npm run lint
+
+  # ─── Job 2: Pruebas funcionales ───────────────────────────────────────────
+  test:
+    name: Pruebas (Vitest)
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias (npm ci)
+        run: npm ci
+
+      - name: Ejecutar pruebas unitarias (Functional Gate)
+        run: npm test
+
+  # ─── Job 3: Seguridad de dependencias ────────────────────────────────────
+  security:
+    name: Seguridad (npm audit SCA)
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias (npm ci)
+        run: npm ci
+
+      # Security Gate: falla si hay vulnerabilidades HIGH o CRITICAL en dependencias
+      # --audit-level=high: umbral de política — HIGH y CRITICAL bloquean el pipeline
+      - name: Auditoría de dependencias (Security Gate — SCA)
+        run: npm audit --audit-level=high

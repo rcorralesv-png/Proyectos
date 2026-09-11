@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hello Secure World — Guía de Práctica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" />
+<style>
+/* ── Design tokens ───────────────────────────────────────────────────── */
+:root {
+  --ms-blue:      #0078d4;
+  --ms-blue-dark: #005a9e;
+  --ms-blue-pale: #eff6fc;
+  --ms-green:     #107c10;
+  --ms-green-pale:#f1faf1;
+  --ms-yellow:    #7d5900;
+  --ms-yellow-pale:#fffbf0;
+  --ms-red:       #c50f1f;
+  --ms-red-pale:  #fdf3f4;
+  --ms-gray:      #616161;
+  --ms-gray-light:#f5f5f5;
+  --text:         #212121;
+  --text-muted:   #616161;
+  --border:       #d1d1d1;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'Source Code Pro', 'Cascadia Code', 'Consolas', monospace;
+  --sidebar-w: 260px;
+  --content-max: 780px;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+.topbar {
+  background: var(--ms-blue);
+  color: #fff;
+  padding: 0 32px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  flex-shrink: 0;
+}
+.topbar-logo {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+.topbar-sep { opacity: 0.4; }
+.topbar-title { font-size: 0.9rem; font-weight: 400; opacity: 0.95; }
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; }
+.btn-print {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+  padding: 5px 14px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.15s;
+}
+.btn-print:hover { background: rgba(255,255,255,0.28); }
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+.layout {
+  display: flex;
+  flex: 1;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--ms-gray-light);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+.sidebar-section {
+  padding: 0 0 16px;
+}
+.sidebar-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 20px 4px;
+}
+.sidebar-link {
+  display: block;
+  padding: 6px 20px 6px 24px;
+  font-size: 0.84rem;
+  color: var(--text);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  line-height: 1.3;
+  transition: background 0.12s, border-color 0.12s;
+}
+.sidebar-link:hover { background: #ebebeb; }
+.sidebar-link.active { border-left-color: var(--ms-blue); color: var(--ms-blue); font-weight: 600; background: #e3f2fd; }
+.sidebar-link.module { font-weight: 500; }
+.sidebar-link.unit { padding-left: 36px; font-size: 0.8rem; color: var(--text-muted); }
+
+/* ── Main content ────────────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  padding: 40px 48px 80px;
+  max-width: calc(var(--sidebar-w) + var(--content-max) + 96px);
+}
+.content-inner { max-width: var(--content-max); }
+
+/* ── Module header ───────────────────────────────────────────────────── */
+.module-header {
+  border-bottom: 3px solid var(--ms-blue);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+.module-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ms-blue);
+  margin-bottom: 8px;
+}
+.module-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-wrap: balance;
+}
+.module-meta {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.module-meta span { display: flex; align-items: center; gap: 5px; }
+.module-meta svg { width: 14px; height: 14px; fill: currentColor; }
+
+/* ── Unit heading ────────────────────────────────────────────────────── */
+.unit-header {
+  margin: 48px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.unit-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.unit-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Typography ──────────────────────────────────────────────────────── */
+h2 { font-size: 1.2rem; font-weight: 600; color: var(--text); margin: 28px 0 10px; }
+h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin: 20px 0 8px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px 22px; }
+li { margin-bottom: 5px; }
+li > ul, li > ol { margin-top: 5px; }
+strong { font-weight: 600; }
+a { color: var(--ms-blue); }
+a:hover { text-decoration: underline; }
+
+/* ── Learning objectives ─────────────────────────────────────────────── */
+.objectives {
+  background: var(--ms-blue-pale);
+  border-left: 4px solid var(--ms-blue);
+  border-radius: 0 4px 4px 0;
+  padding: 16px 20px;
+  margin: 0 0 28px;
+}
+.objectives-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ms-blue-dark);
+  margin-bottom: 10px;
+}
+.objectives ul { margin: 0 0 0 18px; }
+.objectives li { font-size: 0.9rem; color: var(--ms-blue-dark); margin-bottom: 4px; }
+
+/* ── Prerequisites ───────────────────────────────────────────────────── */
+.prereqs {
+  background: var(--ms-yellow-pale);
+  border: 1px solid #f0d070;
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 0 0 24px;
+  font-size: 0.88rem;
+}
+.prereqs-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ms-yellow);
+  margin-bottom: 8px;
+}
+.prereqs ul { margin: 0 0 0 18px; }
+
+/* ── Callout boxes ───────────────────────────────────────────────────── */
+.callout {
+  display: flex;
+  gap: 12px;
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.callout-icon { font-size: 1.1rem; flex-shrink: 0; line-height: 1.4; }
+.callout-body { flex: 1; }
+.callout-body strong { display: block; margin-bottom: 3px; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.callout.note      { background: var(--ms-blue-pale);   border-left: 4px solid var(--ms-blue);  }
+.callout.note strong { color: var(--ms-blue-dark); }
+.callout.important { background: var(--ms-red-pale);    border-left: 4px solid var(--ms-red);   }
+.callout.important strong { color: var(--ms-red); }
+.callout.tip       { background: var(--ms-green-pale);  border-left: 4px solid var(--ms-green); }
+.callout.tip strong { color: var(--ms-green); }
+.callout.warning   { background: var(--ms-yellow-pale); border-left: 4px solid #f0d070;         }
+.callout.warning strong { color: var(--ms-yellow); }
+
+/* ── Steps ───────────────────────────────────────────────────────────── */
+.steps { counter-reset: step; list-style: none; margin: 0 0 20px; padding: 0; }
+.steps li {
+  counter-increment: step;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+  align-items: flex-start;
+}
+.steps li::before {
+  content: counter(step);
+  background: var(--ms-blue);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.steps li > div { flex: 1; }
+.steps li > div > p:last-child { margin-bottom: 0; }
+
+/* ── Code blocks ─────────────────────────────────────────────────────── */
+pre {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 12px 0 18px;
+  position: relative;
+  white-space: pre;
+}
+code {
+  font-family: var(--mono);
+  font-size: 0.83em;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: #333;
+}
+pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+
+/* Syntax highlights inside pre */
+pre .kw  { color: #569cd6; }
+pre .str { color: #ce9178; }
+pre .cmt { color: #6a9955; }
+pre .cmd { color: #9cdcfe; }
+pre .hl  { color: #f85149; font-weight: 600; }
+pre .ok  { color: #4ec9b0; }
+
+/* ── Table ───────────────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 14px 0 20px; border-radius: 4px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+th {
+  background: var(--ms-blue);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+td { padding: 9px 14px; border-top: 1px solid var(--border); vertical-align: top; }
+tr:nth-child(even) td { background: var(--ms-gray-light); }
+
+/* ── Check your knowledge ────────────────────────────────────────────── */
+.check-section {
+  background: var(--ms-gray-light);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px 24px;
+  margin: 32px 0 0;
+}
+.check-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.check-title::before {
+  content: '✓';
+  background: var(--ms-green);
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.check-q { font-weight: 600; margin-bottom: 8px; font-size: 0.92rem; }
+.check-a { font-size: 0.87rem; color: var(--text-muted); margin-bottom: 0; }
+
+/* ── Divider ─────────────────────────────────────────────────────────── */
+.module-divider {
+  border: none;
+  border-top: 2px solid var(--ms-blue);
+  margin: 56px 0 48px;
+  opacity: 0.25;
+}
+
+/* ── Scenario badge ──────────────────────────────────────────────────── */
+.scenario-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ms-blue);
+  color: #fff;
+  padding: 4px 14px 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+/* ── Print ───────────────────────────────────────────────────────────── */
+@media print {
+  .topbar, .sidebar, .btn-print { display: none !important; }
+  .content { padding: 0; }
+  .layout { display: block; }
+  body { font-size: 11pt; }
+  pre { font-size: 8pt; }
+  .module-divider { page-break-before: always; border-top: 1pt solid #ccc; margin: 0; }
+  a { color: inherit; text-decoration: none; }
+  h2, h3 { page-break-after: avoid; }
+  pre, .callout, .check-section { page-break-inside: avoid; }
+  @page { margin: 2.5cm 2cm; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Top bar ═══ -->
+<div class="topbar">
+  <span class="topbar-logo">Hello Secure World</span>
+  <span class="topbar-sep">|</span>
+  <span class="topbar-title">Guía de Práctica — DevSecOps con GitHub Actions</span>
+  <div class="topbar-actions">
+    <button class="btn-print" onclick="window.print()">⬇ Guardar como PDF</button>
+  </div>
+</div>
+
+<!-- ═══ Layout ═══ -->
+<div class="layout">
+
+<!-- ═══ Sidebar ═══ -->
+<nav class="sidebar" aria-label="Navegación del curso">
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Módulos</div>
+    <a class="sidebar-link module active" href="#overview">Panorama general</a>
+    <a class="sidebar-link unit" href="#overview-intro">Introducción</a>
+    <a class="sidebar-link unit" href="#overview-flow">Flujo de práctica</a>
+    <a class="sidebar-link unit" href="#overview-prereqs">Prerequisitos</a>
+  </div>
+  <div class="sidebar-section">
+    <a class="sidebar-link module" href="#setup">Módulo 1 — Configuración</a>
+    <a class="sidebar-link unit" href="#setup-fork">Fork y clon</a>
+    <a class="sidebar-link unit" href="#setup-actions">GitHub Actions</a>
+    <a class="sidebar-link unit" href="#setup-secrets">Secret Scanning</a>
+    <a class="sidebar-link unit" href="#setup-codeql">CodeQL</a>
+    <a class="sidebar-link unit" href="#setup-branch">Branch Protection</a>
+    <a class="sidebar-link unit" href="#setup-verify">Verificación</a>
+  </div>
+  <div class="sidebar-section">
+    <a class="sidebar-link module" href="#sca">Módulo 2 — SCA</a>
+    <a class="sidebar-link unit" href="#sca-problem">El problema</a>
+    <a class="sidebar-link unit" href="#sca-steps">Pasos</a>
+    <a class="sidebar-link unit" href="#sca-concepts">Conceptos</a>
+  </div>
+  <div class="sidebar-section">
+    <a class="sidebar-link module" href="#secrets">Módulo 3 — Secret Scanning</a>
+    <a class="sidebar-link unit" href="#secrets-problem">El problema</a>
+    <a class="sidebar-link unit" href="#secrets-steps">Pasos</a>
+    <a class="sidebar-link unit" href="#secrets-concepts">Conceptos</a>
+  </div>
+  <div class="sidebar-section">
+    <a class="sidebar-link module" href="#sast">Módulo 4 — SAST / CodeQL</a>
+    <a class="sidebar-link unit" href="#sast-problem">El problema</a>
+    <a class="sidebar-link unit" href="#sast-steps">Pasos</a>
+    <a class="sidebar-link unit" href="#sast-concepts">Conceptos</a>
+  </div>
+</nav>
+
+<!-- ═══ Content ═══ -->
+<main class="content">
+<div class="content-inner">
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- PANORAMA GENERAL                                                   -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section id="overview">
+  <div class="module-header">
+    <div class="module-eyebrow">Hello Secure World · Guía de Práctica</div>
+    <h1 class="module-title">Práctica Real en GitHub — DevSecOps con GitHub Actions</h1>
+    <div class="module-meta">
+      <span>
+        <svg viewBox="0 0 16 16"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm.5 4.5v4.25l2.75 2.75-.75.75L7.5 9.25V4.5h1z"/></svg>
+        Tiempo estimado: 60–90 minutos
+      </span>
+      <span>
+        <svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM2 8a6 6 0 1112 0A6 6 0 012 8z"/><path d="M7.5 4h1v5h-1V4zm0 5.5h1v1h-1v-1z"/></svg>
+        Nivel: Intermedio
+      </span>
+      <span>
+        <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm1 13H7v-2h2v2zm0-3H7V3h2v7z"/></svg>
+        3 escenarios manos-a-la-obra
+      </span>
+    </div>
+  </div>
+
+  <div class="objectives">
+    <div class="objectives-title">Al completar esta guía podrás:</div>
+    <ul>
+      <li>Configurar un fork con los controles de seguridad reales de GitHub</li>
+      <li>Ver un Security Gate de SCA bloquear un merge con una dependencia vulnerable</li>
+      <li>Experimentar GitHub Push Protection rechazando un push con un secreto</li>
+      <li>Interpretar una alerta de CodeQL con taint tracking y aplicar el fix</li>
+      <li>Verificar tus resultados con los códigos <code>HSW-PRACTICE-*</code></li>
+    </ul>
+  </div>
+
+  <div id="overview-intro">
+    <h2>Introducción</h2>
+    <p>
+      El simulador interactivo de <strong>Hello Secure World</strong> te mostró cómo funcionan los
+      controles de seguridad de forma conceptual. Esta práctica te pone en el lugar del desarrollador:
+      cometerás los errores reales, observarás los controles en acción y aprenderás a corregirlos.
+    </p>
+    <p>
+      Trabajarás en tu propio fork del repositorio. Cada escenario introduce un problema de seguridad
+      deliberado y un ciclo completo de <strong>detectar → entender → corregir → verificar</strong>.
+    </p>
+  </div>
+
+  <div id="overview-flow">
+    <h2>Flujo de práctica</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Escenario</th><th>Control</th><th>Resultado esperado</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>01</strong></td><td>Dependencia vulnerable</td><td>SCA — <code>npm audit</code></td><td>CI falla con HIGH vulnerability</td></tr>
+          <tr><td><strong>02</strong></td><td>Token en código fuente</td><td>Secret Scanning + Push Protection</td><td>Push bloqueado antes de llegar al historial</td></tr>
+          <tr><td><strong>03</strong></td><td>DOM XSS con innerHTML</td><td>SAST — CodeQL (<code>js/xss</code>)</td><td>Alerta de taint tracking en el PR</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">ℹ️</span>
+      <div class="callout-body">
+        <strong>Nota</strong>
+        Los escenarios son independientes entre sí y pueden realizarse en cualquier orden.
+        Solo necesitas completar la configuración del Módulo 1 una vez.
+      </div>
+    </div>
+  </div>
+
+  <div id="overview-prereqs">
+    <h2>Prerequisitos</h2>
+    <div class="prereqs">
+      <div class="prereqs-title">Antes de empezar necesitas:</div>
+      <ul>
+        <li><strong>Cuenta de GitHub</strong> — gratuita. Todos los controles de esta guía funcionan en repositorios públicos sin costo.</li>
+        <li><strong>Git</strong> instalado en tu equipo (<a href="https://git-scm.com">git-scm.com</a>)</li>
+        <li><strong>Node.js 18 o superior</strong> (<a href="https://nodejs.org">nodejs.org</a>)</li>
+        <li>Haber completado los 11 labs del simulador (recomendado, no obligatorio)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr class="module-divider" />
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MÓDULO 1: CONFIGURACIÓN                                            -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section id="setup">
+  <div class="module-header">
+    <div class="module-eyebrow">Módulo 1 de 4</div>
+    <h1 class="module-title">Configuración del Fork</h1>
+    <div class="module-meta">
+      <span>⏱ ~10 minutos</span>
+      <span>🔧 Configuración única</span>
+    </div>
+  </div>
+
+  <div class="objectives">
+    <div class="objectives-title">En este módulo configurarás:</div>
+    <ul>
+      <li>Tu fork del repositorio con GitHub Actions habilitado</li>
+      <li>Secret Scanning con Push Protection activo</li>
+      <li>CodeQL Analysis para JavaScript/TypeScript</li>
+      <li>Branch Protection con Required Status Checks (recomendado)</li>
+    </ul>
+  </div>
+
+  <div id="setup-fork">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 1.1</div>
+      <h2 class="unit-title">Fork y clon del repositorio</h2>
+    </div>
+
+    <ol class="steps">
+      <li><div>
+        <p>En la página del repositorio original, haz clic en el botón <strong>Fork</strong> (esquina superior derecha).</p>
+      </div></li>
+      <li><div>
+        <p>Selecciona tu cuenta de GitHub como destino del fork y confirma con <strong>Create fork</strong>.</p>
+      </div></li>
+      <li><div>
+        <p>Clona tu fork localmente e instala las dependencias:</p>
+        <pre><span class="cmt"># Reemplaza TU_USUARIO con tu nombre de GitHub</span>
+git clone https://github.com/TU_USUARIO/Hello_Secure_World.git
+cd Hello_Secure_World
+npm install</pre>
+      </div></li>
+      <li><div>
+        <p>Verifica que el proyecto funciona correctamente:</p>
+        <pre>npm test</pre>
+        <p>Deberías ver <code>33 passed</code> en la salida.</p>
+      </div></li>
+    </ol>
+  </div>
+
+  <div id="setup-actions">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 1.2</div>
+      <h2 class="unit-title">Habilitar GitHub Actions</h2>
+    </div>
+
+    <ol class="steps">
+      <li><div>
+        <p>En tu fork, ve a la pestaña <strong>Actions</strong>.</p>
+      </div></li>
+      <li><div>
+        <p>Si ves el mensaje <em>"Workflows aren't being run on this forked repository"</em>, haz clic en <strong>I understand my workflows, go ahead and enable them</strong>.</p>
+      </div></li>
+    </ol>
+
+    <p>Los tres workflows que estarán disponibles son:</p>
+    <ul>
+      <li><strong>CI</strong> — Calidad (ESLint), pruebas (Vitest) y seguridad (npm audit)</li>
+      <li><strong>CodeQL Analysis</strong> — Análisis SAST de JavaScript/TypeScript</li>
+      <li><strong>Lab Validation</strong> — Validación de los escenarios de práctica</li>
+    </ul>
+  </div>
+
+  <div id="setup-secrets">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 1.3</div>
+      <h2 class="unit-title">Secret Scanning y Push Protection</h2>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <strong>Consejo</strong>
+        En repositorios <strong>públicos</strong> Secret Scanning y Push Protection están habilitados por defecto.
+        Solo sigue estos pasos si tu fork es privado.
+      </div>
+    </div>
+
+    <ol class="steps">
+      <li><div>
+        <p>Ve a <strong>Settings → Security → Code security and analysis</strong>.</p>
+      </div></li>
+      <li><div>
+        <p>En la sección <em>Secret scanning</em>, haz clic en <strong>Enable</strong>.</p>
+      </div></li>
+      <li><div>
+        <p>En la sección <em>Push protection</em>, haz clic en <strong>Enable</strong>.</p>
+        <div class="callout important">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>Importante</strong>
+            Push Protection es el control que bloquea el push <em>antes</em> de que el secreto llegue al historial.
+            Sin él, Secret Scanning solo detecta; no previene.
+          </div>
+        </div>
+      </div></li>
+    </ol>
+  </div>
+
+  <div id="setup-codeql">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 1.4</div>
+      <h2 class="unit-title">CodeQL Analysis</h2>
+    </div>
+
+    <p>
+      CodeQL se activa automáticamente a través del workflow <code>codeql.yml</code> incluido en el repositorio.
+      No requiere configuración adicional — el análisis se ejecuta en cada Pull Request.
+    </p>
+
+    <p>Para verificar que está activo:</p>
+    <ol class="steps">
+      <li><div>
+        <p>Ve a <strong>Settings → Security → Code security and analysis</strong>.</p>
+      </div></li>
+      <li><div>
+        <p>En la sección <em>Code scanning</em>, deberías ver <strong>CodeQL</strong> listado como herramienta activa.</p>
+      </div></li>
+    </ol>
+  </div>
+
+  <div id="setup-branch">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 1.5</div>
+      <h2 class="unit-title">Branch Protection (recomendado)</h2>
+    </div>
+
+    <p>
+      Branch Protection convierte los controles automáticos en <strong>Security Gates</strong> reales:
+      ningún PR puede mergearse si un required status check falla.
+    </p>
+
+    <ol class="steps">
+      <li><div>
+        <p>Ve a <strong>Settings → Branches → Add branch protection rule</strong>.</p>
+      </div></li>
+      <li><div>
+        <p>En <em>Branch name pattern</em>, escribe <code>main</code>.</p>
+      </div></li>
+      <li><div>
+        <p>Activa las siguientes opciones:</p>
+        <ul>
+          <li>✅ <strong>Require status checks to pass before merging</strong></li>
+          <li>✅ <strong>Require branches to be up to date before merging</strong></li>
+        </ul>
+      </div></li>
+      <li><div>
+        <p>En el buscador de status checks, agrega:</p>
+        <ul>
+          <li><code>security / Verificar dependencias</code></li>
+          <li><code>CodeQL / Analyze (javascript-typescript)</code></li>
+        </ul>
+      </div></li>
+      <li><div>
+        <p>Haz clic en <strong>Create</strong>.</p>
+      </div></li>
+    </ol>
+  </div>
+
+  <div id="setup-verify">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 1.6</div>
+      <h2 class="unit-title">Verificar la configuración</h2>
+    </div>
+
+    <p>Crea un PR de prueba vacío para confirmar que todos los checks se ejecutan:</p>
+
+    <pre>git checkout -b test/setup-verification
+git commit --allow-empty -m "test: verificar configuración de CI"
+git push origin test/setup-verification</pre>
+
+    <p>Abre el PR en GitHub. Deberías ver los siguientes checks ejecutarse:</p>
+    <ul>
+      <li>✅ <code>quality / Lint y formato</code></li>
+      <li>✅ <code>test / Pruebas unitarias</code></li>
+      <li>✅ <code>security / Verificar dependencias</code></li>
+      <li>⏳ <code>CodeQL / Analyze (javascript-typescript)</code> — puede tardar 5–10 min</li>
+    </ul>
+
+    <p>Cuando todos estén verdes, cierra el PR sin mergear y elimina la rama:</p>
+
+    <pre>git checkout main
+git push origin --delete test/setup-verification
+git branch -D test/setup-verification</pre>
+
+    <div class="callout tip">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <strong>Listo</strong>
+        Tu fork está configurado. Continúa con cualquiera de los tres escenarios de práctica.
+      </div>
+    </div>
+  </div>
+
+  <div class="check-section">
+    <div class="check-title">Comprueba tus conocimientos</div>
+    <p class="check-q">¿Qué diferencia a Secret Scanning de Secret Scanning + Push Protection?</p>
+    <p class="check-a">Secret Scanning solo detecta secretos ya en el historial (modo reactivo). Push Protection bloquea el push antes de que el secreto llegue al repositorio (modo preventivo). Ambos son complementarios, pero Push Protection es el control proactivo.</p>
+  </div>
+</section>
+
+<hr class="module-divider" />
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MÓDULO 2: SCA                                                      -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section id="sca">
+  <div class="module-header">
+    <div class="module-eyebrow">Módulo 2 de 4 · Escenario 01</div>
+    <h1 class="module-title">SCA: Dependencia Vulnerable</h1>
+    <div class="module-meta">
+      <span>⏱ ~15 minutos</span>
+      <span>🔒 Control: npm audit</span>
+      <span>🎯 CVE-2020-8203 · lodash</span>
+    </div>
+  </div>
+
+  <div class="objectives">
+    <div class="objectives-title">Al completar este escenario podrás:</div>
+    <ul>
+      <li>Reproducir un fallo de SCA en CI con una dependencia HIGH</li>
+      <li>Leer el reporte de <code>npm audit</code> e identificar el CVE afectado</li>
+      <li>Aplicar el fix (actualizar la dependencia) y verificar que CI vuelve a pasar</li>
+      <li>Explicar por qué <code>package-lock.json</code> es crítico para SCA</li>
+    </ul>
+  </div>
+
+  <div id="sca-problem">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 2.1</div>
+      <h2 class="unit-title">Contexto del problema</h2>
+    </div>
+
+    <p>
+      El archivo <code>practice/scenarios/01-sca/package.json</code> incluye <code>lodash@4.17.4</code>.
+      Esta versión contiene <strong>CVE-2020-8203</strong> (Prototype Pollution, severidad HIGH, CVSS 7.4).
+    </p>
+    <p>
+      El job <code>security</code> de CI ejecuta <code>npm audit --audit-level=high</code> con la política
+      <em>HIGH o CRITICAL → FAIL</em>. Cuando el job falla, el status check del PR falla — y si tienes
+      Branch Protection configurado, el merge queda bloqueado.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">ℹ️</span>
+      <div class="callout-body">
+        <strong>Scanner vs Security Gate</strong>
+        <code>npm audit</code> es el <em>scanner</em>. La combinación de <code>--audit-level=high</code>
+        + <em>Required Status Check</em> en Branch Protection es lo que lo convierte en un
+        <em>Security Gate</em>: si falla el check, el merge no puede avanzar.
+      </div>
+    </div>
+  </div>
+
+  <div id="sca-steps">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 2.2</div>
+      <h2 class="unit-title">Pasos del escenario</h2>
+    </div>
+
+    <ol class="steps">
+      <li><div>
+        <p><strong>Introduce la dependencia vulnerable</strong> en la raíz de tu fork clonado:</p>
+        <pre>cp practice/scenarios/01-sca/package.json package.json
+npm install   <span class="cmt"># regenera package-lock.json con lodash@4.17.4</span></pre>
+      </div></li>
+      <li><div>
+        <p><strong>Verifica localmente</strong> que npm audit detecta el problema:</p>
+        <pre>npm audit --audit-level=high</pre>
+        <p>Salida esperada:</p>
+        <pre><span class="hl">lodash  &lt;4.17.21
+Severity: high
+Prototype Pollution — https://github.com/advisories/GHSA-jf85-cpcp-j695
+fix available via `npm audit fix`
+node_modules/lodash
+
+1 high severity vulnerability</span></pre>
+      </div></li>
+      <li><div>
+        <p><strong>Abre un Pull Request</strong> desde una rama nueva:</p>
+        <pre>git checkout -b lab/sca-vulnerable-dep
+git add package.json package-lock.json
+git commit -m "lab: introduce dependencia vulnerable para práctica SCA"
+git push origin lab/sca-vulnerable-dep</pre>
+        <p>En GitHub, abre un Pull Request desde <code>lab/sca-vulnerable-dep</code> hacia <code>main</code>.</p>
+      </div></li>
+      <li><div>
+        <p><strong>Observa el fallo de CI</strong> en la pestaña Actions de tu fork:</p>
+        <ul>
+          <li>✅ <code>quality</code> — PASSED</li>
+          <li>✅ <code>test</code> — PASSED</li>
+          <li>❌ <code>security / Verificar dependencias</code> — <strong>FAILED</strong></li>
+        </ul>
+        <p>El botón Merge estará deshabilitado si tienes Branch Protection configurado.</p>
+      </div></li>
+      <li><div>
+        <p><strong>Corrige la vulnerabilidad</strong> actualizando lodash:</p>
+        <pre>npm install lodash@^4.17.21
+git add package.json package-lock.json
+git commit -m "fix: actualizar lodash a versión segura (CVE-2020-8203)"
+git push</pre>
+      </div></li>
+      <li><div>
+        <p><strong>Verifica que CI pasa</strong>. El nuevo push dispara un nuevo run en CI.
+        Observa en Actions cómo el job <code>security</code> ahora reporta ✅ PASSED.</p>
+      </div></li>
+    </ol>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div class="callout-body">
+        <strong>Código de verificación</strong>
+        Cuando todos los checks estén en verde, el workflow <code>lab-validate.yml</code> publicará
+        automáticamente en el PR un comentario con tu código <code>HSW-PRACTICE-01-XXXXXXXXXXXXXXXX</code>.
+        Guárdalo para compartir con tu instructor.
+      </div>
+    </div>
+  </div>
+
+  <div id="sca-concepts">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 2.3</div>
+      <h2 class="unit-title">Conceptos clave</h2>
+    </div>
+
+    <h3>Por qué importa package-lock.json</h3>
+    <p>
+      <code>npm audit</code> analiza el árbol de dependencias <em>bloqueado</em> por el lockfile,
+      no solo el rango declarado en <code>package.json</code>. Si el lockfile resuelve
+      <code>lodash@4.17.4</code>, npm audit detectará el CVE aunque en package.json el rango
+      permita versiones más nuevas. Por eso ambos archivos deben estar en el repositorio.
+    </p>
+
+    <h3>Riesgo residual de SCA</h3>
+    <p>
+      SCA solo detecta vulnerabilidades <em>documentadas con CVE</em>. No puede detectar:
+    </p>
+    <ul>
+      <li>Zero-days (vulnerabilidades no conocidas públicamente)</li>
+      <li>Paquetes maliciosos sin CVE registrado (supply chain attacks)</li>
+      <li>Código backdooreado que supera las revisiones de publicación en npm</li>
+    </ul>
+  </div>
+
+  <div class="check-section">
+    <div class="check-title">Comprueba tus conocimientos</div>
+    <p class="check-q">Un pipeline verde en el escenario SCA garantiza que el proyecto no tiene vulnerabilidades. ¿Verdadero o falso?</p>
+    <p class="check-a"><strong>Falso.</strong> Un pipeline verde confirma que no se detectaron vulnerabilidades <em>conocidas con CVE</em> en el rango auditado. Las vulnerabilidades zero-day y los paquetes maliciosos sin CVE registrado quedan fuera del alcance de <code>npm audit</code>.</p>
+  </div>
+</section>
+
+<hr class="module-divider" />
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MÓDULO 3: SECRET SCANNING                                          -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section id="secrets">
+  <div class="module-header">
+    <div class="module-eyebrow">Módulo 3 de 4 · Escenario 02</div>
+    <h1 class="module-title">Secret Scanning: Token en Código Fuente</h1>
+    <div class="module-meta">
+      <span>⏱ ~15 minutos</span>
+      <span>🔑 Control: Push Protection</span>
+      <span>🎯 GitHub PAT pattern — GH013</span>
+    </div>
+  </div>
+
+  <div class="objectives">
+    <div class="objectives-title">Al completar este escenario podrás:</div>
+    <ul>
+      <li>Ver GitHub Push Protection rechazar un push con un secreto detectado</li>
+      <li>Explicar por qué el historial de Git hace crítica la acción preventiva</li>
+      <li>Aplicar la respuesta correcta: revocar antes de corregir</li>
+      <li>Reemplazar credenciales hardcodeadas con variables de entorno</li>
+    </ul>
+  </div>
+
+  <div id="secrets-problem">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 3.1</div>
+      <h2 class="unit-title">Contexto del problema</h2>
+    </div>
+
+    <p>
+      El archivo <code>practice/scenarios/02-secret/config/settings.js</code> contiene un token
+      con el patrón <code>github_pat_...</code> que GitHub Secret Scanning reconoce como
+      un <strong>Personal Access Token de GitHub</strong>.
+    </p>
+
+    <div class="callout important">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body">
+        <strong>Importante — Token inválido</strong>
+        El token incluido en este escenario es <strong>inválido y fue revocado</strong> inmediatamente.
+        Su único propósito es demostrar la detección de patrones por Push Protection.
+        Nunca lo uses como credencial real.
+      </div>
+    </div>
+  </div>
+
+  <div id="secrets-steps">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 3.2</div>
+      <h2 class="unit-title">Pasos del escenario</h2>
+    </div>
+
+    <ol class="steps">
+      <li><div>
+        <p><strong>Copia el archivo con el token</strong> a tu fork:</p>
+        <pre>mkdir -p config
+cp practice/scenarios/02-secret/config/settings.js config/settings.js</pre>
+      </div></li>
+      <li><div>
+        <p><strong>Intenta hacer push</strong> a una rama nueva:</p>
+        <pre>git checkout -b lab/secret-scanning-demo
+git add config/settings.js
+git commit -m "lab: agregar configuración con token (práctica Secret Scanning)"
+git push origin lab/secret-scanning-demo</pre>
+      </div></li>
+      <li><div>
+        <p><strong>Observa el bloqueo de Push Protection</strong>. La salida de Git será:</p>
+        <pre><span class="hl">remote: error: GH013: Repository rule violations found for
+remote:        refs/heads/lab/secret-scanning-demo.
+remote:
+remote: - GITHUB PUSH PROTECTION
+remote:   ——————————————————————————————————————
+remote:   Resolve the following secrets before pushing again.
+remote:
+remote:   (?) GitHub Personal Access Token found in commit a3f9c12:
+remote:       config/settings.js, line 15
+remote:
+remote:   To push, remove the secret from commit(s) or allow the secret:
+remote:   https://github.com/.../security/secret-scanning/unblock-secret/...
+remote:
+ ! [remote rejected] lab/secret-scanning-demo -&gt; lab/secret-scanning-demo
+error: failed to push some refs</span></pre>
+        <p>El secreto <strong>nunca llegó al historial del repositorio</strong>.</p>
+      </div></li>
+      <li><div>
+        <p><strong>Entiende la respuesta correcta.</strong> Aunque el token de este escenario es inválido,
+        en un caso real la acción más urgente es siempre:</p>
+        <ol>
+          <li>Revocar el token inmediatamente en GitHub → Settings → Developer settings → Personal access tokens</li>
+          <li>Notificar al equipo de seguridad</li>
+          <li>Luego limpiar el archivo</li>
+        </ol>
+      </div></li>
+      <li><div>
+        <p><strong>Corrige el archivo</strong> reemplazando el token hardcodeado con una variable de entorno:</p>
+        <pre><span class="kw">const</span> config = {
+  apiUrl: <span class="str">'https://api.example.com'</span>,
+  <span class="cmt">// El token viene de una variable de entorno, no del código fuente</span>
+  token: process.env.API_TOKEN,
+};
+<span class="kw">export default</span> config;</pre>
+        <pre>git add config/settings.js
+git commit -m "fix: mover token a variable de entorno (eliminar hardcoded secret)"
+git push</pre>
+      </div></li>
+      <li><div>
+        <p>Sin el patrón de token, <strong>Push Protection permite el push</strong>.
+        En <strong>GitHub → Security → Secret scanning alerts</strong> verás la alerta marcada como auto-resuelta.</p>
+      </div></li>
+    </ol>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div class="callout-body">
+        <strong>Código de verificación</strong>
+        Cuando el push limpio llegue a la rama, el workflow publicará en el PR
+        <code>HSW-PRACTICE-02-XXXXXXXXXXXXXXXX</code>.
+      </div>
+    </div>
+  </div>
+
+  <div id="secrets-concepts">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 3.3</div>
+      <h2 class="unit-title">Conceptos clave</h2>
+    </div>
+
+    <h3>Por qué el historial de Git es permanente</h3>
+    <p>
+      Incluso si eliminas el archivo con el secreto en un commit posterior, el commit original
+      permanece en el historial. Cualquier persona con acceso al repo puede recuperarlo con
+      <code>git log</code>, <code>git show &lt;sha&gt;</code> o <code>git reflog</code>.
+      Por eso Push Protection actúa <em>antes</em> del push: una vez que el secreto llega
+      al historial, "eliminarlo" es mucho más complejo y puede requerir reescribir la historia.
+    </p>
+
+    <h3>Detección basada en patrones</h3>
+    <p>
+      GitHub Secret Scanning detecta más de 200 tipos de tokens de proveedores conocidos
+      (AWS, Azure, Google Cloud, Slack, Stripe, GitHub, etc.) mediante expresiones regulares
+      validadas contra sus formatos oficiales. Un secreto en formato personalizado o sin
+      patrón registrado puede no ser detectado — razón por la que la revisión de código
+      sigue siendo un control complementario necesario.
+    </p>
+  </div>
+
+  <div class="check-section">
+    <div class="check-title">Comprueba tus conocimientos</div>
+    <p class="check-q">Si Push Protection bloqueó el push, ¿necesito revocar el token igualmente?</p>
+    <p class="check-a"><strong>Sí, siempre.</strong> Push Protection evita que el secreto llegue al repositorio, pero no sabes si fue expuesto de otra manera (logs locales, historial de bash, etc.). La revocación es la única forma de garantizar que el token no puede ser usado maliciosamente, independientemente de si el push fue bloqueado.</p>
+  </div>
+</section>
+
+<hr class="module-divider" />
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MÓDULO 4: SAST / CodeQL                                            -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section id="sast">
+  <div class="module-header">
+    <div class="module-eyebrow">Módulo 4 de 4 · Escenario 03</div>
+    <h1 class="module-title">SAST / CodeQL: DOM-based XSS con innerHTML</h1>
+    <div class="module-meta">
+      <span>⏱ ~20 minutos (más 5–15 min de análisis CodeQL)</span>
+      <span>🛡️ Control: CodeQL js/xss</span>
+      <span>🎯 Taint tracking source → sink</span>
+    </div>
+  </div>
+
+  <div class="objectives">
+    <div class="objectives-title">Al completar este escenario podrás:</div>
+    <ul>
+      <li>Interpretar una alerta de CodeQL con la cadena source → propagación → sink</li>
+      <li>Entender la diferencia entre análisis dinámico (tests) y análisis estático (SAST)</li>
+      <li>Aplicar el fix correcto: <code>textContent</code> en lugar de <code>innerHTML</code></li>
+      <li>Resolver la alerta de Code Scanning en GitHub</li>
+    </ul>
+  </div>
+
+  <div id="sast-problem">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 4.1</div>
+      <h2 class="unit-title">Contexto del problema</h2>
+    </div>
+
+    <p>
+      El archivo <code>practice/scenarios/03-xss/src/demo-insecure.js</code> usa <code>innerHTML</code>
+      con el parámetro <code>name</code> directamente, sin sanitización. CodeQL ejecuta la query
+      <code>js/xss</code> que traza:
+    </p>
+    <ul>
+      <li><strong>Source</strong>: el parámetro <code>name</code> — datos de entrada no confiables</li>
+      <li><strong>Propagación</strong>: el template literal incluye la fuente sin sanitización</li>
+      <li><strong>Sink</strong>: <code>outputElement.innerHTML = ...</code> — interpreta HTML</li>
+    </ul>
+
+    <div class="callout warning">
+      <span class="callout-icon">⏳</span>
+      <div class="callout-body">
+        <strong>Tiempo de análisis</strong>
+        El primer análisis de CodeQL en un fork puede tardar entre 5 y 15 minutos.
+        Si después de 20 minutos no hay resultado, cancela el run en Actions y vuelve a hacer push para reiniciarlo.
+      </div>
+    </div>
+  </div>
+
+  <div id="sast-steps">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 4.2</div>
+      <h2 class="unit-title">Pasos del escenario</h2>
+    </div>
+
+    <ol class="steps">
+      <li><div>
+        <p><strong>Copia el archivo inseguro</strong> a tu fork:</p>
+        <pre>cp practice/scenarios/03-xss/src/demo-insecure.js src/demo-insecure.js</pre>
+      </div></li>
+      <li><div>
+        <p><strong>Abre un Pull Request</strong>:</p>
+        <pre>git checkout -b lab/codeql-xss-demo
+git add src/demo-insecure.js
+git commit -m "lab: agregar ejemplo inseguro para práctica CodeQL (XSS)"
+git push origin lab/codeql-xss-demo</pre>
+        <p>En GitHub, abre un Pull Request desde <code>lab/codeql-xss-demo</code> hacia <code>main</code>.</p>
+      </div></li>
+      <li><div>
+        <p><strong>Espera el análisis de CodeQL</strong>. En la pestaña Actions verás el workflow
+        <em>CodeQL Analysis</em> ejecutándose. Cuando termine, el PR mostrará:</p>
+        <ul>
+          <li>❌ <code>CodeQL / Analyze (javascript-typescript)</code> — hallazgo HIGH detectado</li>
+        </ul>
+      </div></li>
+      <li><div>
+        <p><strong>Revisa la alerta</strong> en <strong>GitHub → Security → Code scanning alerts</strong>.
+        La alerta mostrará:</p>
+        <pre>Rule: js/xss  |  Severity: Error (High)
+DOM text set from location-provided value
+
+Source → name  (src/demo-insecure.js:4)
+  ↓ taint flows through template literal
+Sink   → outputElement.innerHTML  (src/demo-insecure.js:7)</pre>
+        <p>
+          Si <code>name</code> fuera <code>&lt;img src=x onerror=alert(1)&gt;</code>,
+          el navegador ejecutaría el handler de error.
+        </p>
+      </div></li>
+      <li><div>
+        <p><strong>Aplica el fix</strong>. Edita <code>src/demo-insecure.js</code>:</p>
+        <pre><span class="cmt">// ANTES (inseguro): HTML parseado — el navegador interpreta el contenido</span>
+outputElement.innerHTML = <span class="str">`&lt;p&gt;¡Hola, ${name}!&lt;/p&gt;`</span>;
+
+<span class="cmt">// DESPUÉS (seguro): texto literal — el navegador no interpreta etiquetas</span>
+<span class="kw">const</span> p = document.createElement(<span class="str">'p'</span>);
+p.textContent = <span class="str">`¡Hola, ${name}!`</span>;
+outputElement.appendChild(p);</pre>
+        <pre>git add src/demo-insecure.js
+git commit -m "fix: reemplazar innerHTML con textContent para prevenir XSS (js/xss)"
+git push</pre>
+      </div></li>
+      <li><div>
+        <p><strong>Verifica que la alerta se resuelve</strong>. El nuevo análisis de CodeQL marcará
+        la alerta como resuelta. El check del PR pasará a ✅ PASSED.</p>
+      </div></li>
+    </ol>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div class="callout-body">
+        <strong>Código de verificación</strong>
+        Con todos los checks en verde, el workflow publicará en el PR
+        <code>HSW-PRACTICE-03-XXXXXXXXXXXXXXXX</code>.
+      </div>
+    </div>
+  </div>
+
+  <div id="sast-concepts">
+    <div class="unit-header">
+      <div class="unit-eyebrow">Unidad 4.3</div>
+      <h2 class="unit-title">Conceptos clave</h2>
+    </div>
+
+    <h3>SAST vs pruebas automatizadas</h3>
+    <p>
+      Las pruebas automatizadas verifican <em>comportamiento esperado</em> — si la función devuelve
+      el valor correcto para los inputs definidos en el test. CodeQL verifica
+      <em>propiedades de seguridad de flujos de datos</em> — si datos de fuentes no confiables
+      pueden llegar a sumideros peligrosos, independientemente de cuáles inputs se prueben.
+      Es posible tener 100% de cobertura de tests y aun así tener vulnerabilidades que solo
+      el análisis estático detecta.
+    </p>
+
+    <h3>textContent vs innerHTML</h3>
+    <p>
+      La diferencia es fundamental: <code>textContent</code> asigna texto literal —
+      el navegador nunca parsea el contenido como HTML. <code>innerHTML</code> parsea
+      el contenido como HTML, lo que significa que cualquier etiqueta o handler de evento
+      incluido en el string se ejecuta en el contexto del documento.
+    </p>
+
+    <h3>Riesgo residual de SAST</h3>
+    <p>
+      SAST puede producir falsos positivos (alertas que no son vulnerabilidades reales)
+      y falsos negativos (vulnerabilidades reales que no detecta). Los problemas de
+      lógica de negocio, diseño inseguro y vulnerabilidades que requieren contexto
+      semántico generalmente escapan al análisis estático.
+    </p>
+  </div>
+
+  <div class="check-section">
+    <div class="check-title">Comprueba tus conocimientos</div>
+    <p class="check-q">¿Por qué <code>textContent</code> protege contra DOM XSS pero <code>innerHTML</code> no?</p>
+    <p class="check-a"><code>textContent</code> trata el contenido asignado como texto puro — el navegador lo renderiza como caracteres, sin interpretar etiquetas HTML ni ejecutar scripts. <code>innerHTML</code> parsea el contenido como HTML, por lo que un payload como <code>&lt;img onerror="robaCredenciales()"&gt;</code> se ejecuta en el contexto del documento con acceso a cookies y el DOM.</p>
+  </div>
+</section>
+
+</div><!-- /.content-inner -->
+</main><!-- /.content -->
+</div><!-- /.layout -->
+
+<script>
+// Sidebar active state on scroll
+const sections = document.querySelectorAll('section[id], div[id]');
+const links = document.querySelectorAll('.sidebar-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.sidebar-link[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

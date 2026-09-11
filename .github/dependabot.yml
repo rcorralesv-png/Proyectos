@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # Actualización semanal de dependencias npm
+  # Dependabot crea PRs con el bump — un humano revisa y aprueba
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - security
+
+  # Actualización semanal de GitHub Actions
+  # Mantiene las Actions en sus versiones más recientes (incluye parches de seguridad)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions

@@ -1,0 +1,206 @@
+name: Lab Validation
+
+on:
+  pull_request:
+    paths:
+      - 'practice/scenarios/**'
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  validate:
+    name: Validar escenarios de práctica
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Detectar escenarios activos en el PR
+        id: detect
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          echo "Archivos cambiados:"
+          echo "$CHANGED"
+
+          HAS_SCA=false
+          HAS_SECRET=false
+          HAS_XSS=false
+
+          if echo "$CHANGED" | grep -q "package.*json"; then
+            if grep -q "lodash" package.json 2>/dev/null; then
+              LODASH_VERSION=$(node -e "const p=require('./package.json'); const v=p.dependencies?.lodash||p.devDependencies?.lodash||''; console.log(v)" 2>/dev/null || echo "")
+              if [ -n "$LODASH_VERSION" ]; then
+                HAS_SCA=true
+                echo "scenario_sca=true" >> $GITHUB_OUTPUT
+                echo "lodash_version=$LODASH_VERSION" >> $GITHUB_OUTPUT
+              fi
+            fi
+          fi
+
+          if echo "$CHANGED" | grep -q "\.js$\|\.ts$"; then
+            if grep -rq "github_pat_" src/ 2>/dev/null || grep -rq "github_pat_" config/ 2>/dev/null; then
+              HAS_SECRET=true
+              echo "scenario_secret=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+          if echo "$CHANGED" | grep -q "demo-insecure\.js\|\.innerHTML"; then
+            if grep -rq "innerHTML" src/ 2>/dev/null; then
+              HAS_XSS=true
+              echo "scenario_xss=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+          echo "has_sca=$HAS_SCA" >> $GITHUB_OUTPUT
+          echo "has_secret=$HAS_SECRET" >> $GITHUB_OUTPUT
+          echo "has_xss=$HAS_XSS" >> $GITHUB_OUTPUT
+
+      - name: Verificar SCA (npm audit)
+        id: sca
+        if: steps.detect.outputs.has_sca == 'true'
+        continue-on-error: true
+        run: |
+          npm audit --audit-level=high 2>&1 | tee /tmp/audit.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "sca_failed=true" >> $GITHUB_OUTPUT
+            # Extraer la vulnerabilidad más relevante
+            VULN=$(grep -A2 "Severity: high" /tmp/audit.txt | head -5 || echo "HIGH vulnerability detected")
+            echo "sca_detail<<EOF" >> $GITHUB_OUTPUT
+            cat /tmp/audit.txt | head -30 >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "sca_failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Verificar Secret en código fuente
+        id: secret
+        if: steps.detect.outputs.has_secret == 'true'
+        run: |
+          echo "secret_found=true" >> $GITHUB_OUTPUT
+          echo "Token con patrón github_pat_ detectado en código fuente"
+
+      - name: Verificar innerHTML (SAST simulado)
+        id: sast
+        if: steps.detect.outputs.has_xss == 'true'
+        run: |
+          COUNT=$(grep -rn "\.innerHTML\s*=" src/ 2>/dev/null | grep -v "textContent" | wc -l)
+          echo "xss_count=$COUNT" >> $GITHUB_OUTPUT
+          if [ "$COUNT" -gt "0" ]; then
+            echo "xss_found=true" >> $GITHUB_OUTPUT
+            LOCATIONS=$(grep -rn "\.innerHTML\s*=" src/ 2>/dev/null | grep -v "textContent" | head -5)
+            echo "xss_locations<<EOF" >> $GITHUB_OUTPUT
+            echo "$LOCATIONS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generar hash de verificación del servidor
+        id: hash
+        run: |
+          TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
+          HASH_INPUT="${{ github.run_id }}-${{ github.repository }}-${TIMESTAMP}-${{ github.actor }}"
+          SERVER_HASH=$(echo -n "$HASH_INPUT" | sha256sum | cut -c1-16 | tr '[:lower:]' '[:upper:]')
+          echo "server_hash=$SERVER_HASH" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "actor=${{ github.actor }}" >> $GITHUB_OUTPUT
+
+      - name: Publicar comentario en el PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const hasSca  = '${{ steps.detect.outputs.has_sca }}'  === 'true';
+            const hasSecret = '${{ steps.detect.outputs.has_secret }}' === 'true';
+            const hasXss  = '${{ steps.detect.outputs.has_xss }}'  === 'true';
+            const scaFailed = '${{ steps.sca.outputs.sca_failed }}' === 'true';
+            const xssFound  = '${{ steps.sast.outputs.xss_found }}' === 'true';
+            const secretFound = '${{ steps.secret.outputs.secret_found }}' === 'true';
+            const serverHash = '${{ steps.hash.outputs.server_hash }}';
+            const timestamp = '${{ steps.hash.outputs.timestamp }}';
+            const actor = '${{ steps.hash.outputs.actor }}';
+
+            let scenarioResults = '';
+            let anyScenarioDetected = false;
+
+            if (hasSca) {
+              anyScenarioDetected = true;
+              const lodashVer = '${{ steps.detect.outputs.lodash_version }}';
+              if (scaFailed) {
+                scenarioResults += `\n### 📦 Escenario 01 — SCA\n`;
+                scenarioResults += `❌ \`npm audit\` detectó vulnerabilidades HIGH\n`;
+                scenarioResults += `- Versión de lodash detectada: \`${lodashVer}\`\n`;
+                scenarioResults += `- CVE: CVE-2020-8203 (Prototype Pollution)\n`;
+                scenarioResults += `- **Acción requerida**: actualizar a \`lodash@^4.17.21\`\n`;
+              } else {
+                scenarioResults += `\n### 📦 Escenario 01 — SCA\n`;
+                scenarioResults += `✅ \`npm audit\` sin vulnerabilidades HIGH — dependencias seguras\n`;
+              }
+            }
+
+            if (hasSecret) {
+              anyScenarioDetected = true;
+              if (secretFound) {
+                scenarioResults += `\n### 🔑 Escenario 02 — Secret Scanning\n`;
+                scenarioResults += `⚠️ Token con patrón \`github_pat_\` encontrado en código fuente\n`;
+                scenarioResults += `- **Si es un token real**: revócalo inmediatamente en GitHub Settings\n`;
+                scenarioResults += `- Mueve el token a una variable de entorno o GitHub Secret\n`;
+                scenarioResults += `- Nota: Push Protection debería haber bloqueado este push — ¿está habilitado?\n`;
+              }
+            }
+
+            if (hasXss) {
+              anyScenarioDetected = true;
+              const count = '${{ steps.sast.outputs.xss_count }}';
+              if (xssFound) {
+                const locations = `${{ steps.sast.outputs.xss_locations }}`;
+                scenarioResults += `\n### 🛡️ Escenario 03 — SAST (innerHTML detectado)\n`;
+                scenarioResults += `❌ Se encontraron ${count} uso(s) de \`.innerHTML =\` en \`src/\`\n`;
+                if (locations) {
+                  scenarioResults += `\`\`\`\n${locations}\n\`\`\`\n`;
+                }
+                scenarioResults += `- **Acción requerida**: reemplazar \`innerHTML\` con \`textContent\` o DOM API segura\n`;
+                scenarioResults += `- CodeQL (js/xss) detectará el mismo patrón durante el análisis completo\n`;
+              } else {
+                scenarioResults += `\n### 🛡️ Escenario 03 — SAST\n`;
+                scenarioResults += `✅ No se encontraron usos de \`innerHTML\` peligroso en \`src/\`\n`;
+              }
+            }
+
+            if (!anyScenarioDetected) {
+              scenarioResults = '\n*No se detectaron archivos de escenarios de práctica en este PR.*\n';
+            }
+
+            const body = `## 🔬 Hello Secure World — Validación de Laboratorio
+
+**PR:** #${{ github.event.pull_request.number }} | **Estudiante:** @${actor} | **Timestamp:** ${timestamp}
+${scenarioResults}
+---
+
+### 🏷️ Código de verificación del servidor
+
+\`\`\`
+HSW-PRACTICE-${serverHash}
+\`\`\`
+
+Este código confirma que el workflow de validación ejecutó en el servidor de GitHub
+para este PR. Compártelo con tu instructor junto con tu código HSW del simulador.
+
+> Generado por \`lab-validate.yml\` — Run ID: \`${{ github.run_id }}\``;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hello Secure World — Laboratorio DevSecOps</title>
+  <meta name="description" content="Laboratorio interactivo de CI/CD seguro y DevSecOps. 10 labs secuenciales con scoring verificable." />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <!-- ═══ PANTALLA 1: Bienvenida / Registro ═══ -->
+  <div id="screen-welcome" class="screen">
+    <div class="welcome-wrap">
+      <header class="welcome-header">
+        <div class="welcome-brand">
+          <span class="brand-icon">🔐</span>
+          <span class="brand-name">Hello Secure World</span>
+        </div>
+        <div class="welcome-badges">
+          <span class="badge-pill">GitHub Actions</span>
+          <span class="badge-pill">DevSecOps</span>
+          <span class="badge-pill">Supply Chain Security</span>
+        </div>
+      </header>
+
+      <div class="welcome-card">
+        <h1 class="welcome-title">Laboratorio de DevSecOps</h1>
+        <p class="welcome-intro">
+          11 laboratorios que cubren el ciclo completo de un pipeline de CI/CD seguro.
+          Cada lab introduce un concepto, te pide interactuar con una herramienta real y luego
+          hace una pregunta de verificación.
+        </p>
+
+        <div class="welcome-rules">
+          <div class="rule-item">⚡ <strong>11 labs</strong> &nbsp;·&nbsp; <strong>100 puntos</strong> totales</div>
+        </div>
+
+        <form id="registration-form" class="registration-form" novalidate>
+          <div class="field-group">
+            <label for="student-name">Nombre completo</label>
+            <input type="text" id="student-name" required
+                   placeholder="Ana García" autocomplete="name" />
+          </div>
+          <div class="field-group">
+            <label for="github-username">Usuario de GitHub</label>
+            <input type="text" id="github-username" required
+                   placeholder="anagarcia" autocomplete="username" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" id="start-btn">
+            Iniciar laboratorio →
+          </button>
+          <p id="reg-error" class="reg-error" hidden>Por favor completa nombre y usuario de GitHub.</p>
+        </form>
+      </div>
+
+      <footer class="welcome-footer">
+        Hello Secure World &nbsp;·&nbsp; Laboratorio CI/CD &amp; DevSecOps
+      </footer>
+    </div>
+  </div>
+
+  <!-- ═══ PANTALLA 2: Lab activo ═══ -->
+  <div id="screen-lab" class="screen" hidden>
+
+    <!-- Header sticky con progreso -->
+    <header class="lab-progress-header">
+      <span class="lab-progress-brand">HSW</span>
+      <div class="lab-progress-track"
+           role="progressbar" aria-label="Progreso" aria-valuemin="0" aria-valuemax="10">
+        <div class="lab-progress-steps" id="progress-steps"></div>
+      </div>
+      <span class="lab-progress-score" id="score-display" aria-live="polite">0 pts</span>
+    </header>
+
+    <!-- Contenido del lab (reemplazado por JS en cada lab) -->
+    <main class="lab-main" id="lab-main" aria-live="polite"></main>
+  </div>
+
+  <!-- ═══ PANTALLA 3: Nota final ═══ -->
+  <div id="screen-complete" class="screen" hidden>
+    <div class="completion-wrap">
+      <div class="completion-card">
+        <div class="completion-icon">🎓</div>
+        <h1 class="completion-title">Laboratorio completado</h1>
+
+        <div class="completion-student">
+          <span id="completion-student-name"></span>
+          &nbsp;·&nbsp;
+          <span id="completion-github" class="text-muted"></span>
+        </div>
+
+        <div class="score-summary">
+          <div class="score-big" id="final-score">-- / 100</div>
+          <div class="score-grade" id="final-grade"></div>
+        </div>
+
+        <div class="score-breakdown" id="score-breakdown"></div>
+
+        <div class="report-section">
+          <h2>Código de verificación para el instructor</h2>
+          <p class="report-desc">
+            Este código contiene tu nombre, usuario de GitHub, respuestas por lab y una firma
+            criptográfica (HMAC-SHA256). Compártelo con tu instructor para verificación.
+          </p>
+          <div class="report-code" id="report-code" aria-label="Código de verificación">
+            Generando código…
+          </div>
+          <button class="btn btn-sm" id="copy-report-btn">📋 Copiar código</button>
+        </div>
+
+        <div class="github-practice-cta">
+          <h2>Parte 2 — Práctica real en GitHub</h2>
+          <p>
+            Haz fork del repositorio y completa los escenarios en <code>practice/</code>.
+            Las instrucciones están en <code>practice/README.md</code>.
+            GitHub Actions generará un hash de servidor independiente que el instructor puede verificar.
+          </p>
+          <a class="btn btn-primary" href="https://github.com" target="_blank" rel="noopener">
+            Ir a GitHub para hacer fork →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+name: SAST — CodeQL (Análisis Estático de Seguridad)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Análisis semanal adicional: detecta vulnerabilidades en código ya mergeado
+  schedule:
+    - cron: '0 6 * * 1'
+
+# Least Privilege: lectura del código + escritura de alertas de seguridad
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: SAST — Análisis CodeQL (JavaScript)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Inicializar CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # Las queries de seguridad-extendida activan detecciones adicionales
+          # incluyendo js/xss, js/code-injection, js/path-injection
+          queries: security-extended
+
+      # Para proyectos JS sin compilación, autobuild detecta el código fuente automáticamente
+      - name: Autobuilder CodeQL
+        uses: github/codeql-action/autobuild@v3
+
+      # Security Gate: si CodeQL encuentra hallazgos, los reporta como alertas en Security tab
+      # La integración con Branch Protection se configura como Required Status Check
+      - name: Ejecutar análisis CodeQL (Security Gate — SAST)
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript

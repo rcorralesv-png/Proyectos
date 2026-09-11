@@ -1,0 +1,80 @@
+/* Shared foundations for the React screens and the interactive lab builders. */
+:root, .hsw-site {
+  color-scheme: dark;
+  --background: #07111f;
+  --surface: #0b1728;
+  --surface-secondary: #101e32;
+  --surface-hover: #172940;
+  --border: #26384d;
+  --border-subtle: #1b2b3d;
+  --input-border: #586f8c;
+  --text-primary: #f5f7fa;
+  --text-secondary: #94a3b8;
+  --text-muted: #8a9bb2;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #3b82f6;
+  --interactive-text: #93bbff;
+  --primary-button: #174ea6;
+  --primary-button-hover: #1d5fc4;
+  --font-ui: Inter, Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: var(--font-ui);
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', Consolas, monospace;
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.28), inset 0 1px rgba(255, 255, 255, 0.02);
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* Status colors convey outcomes; labels and icons accompany every state. */
+  --status-pass: #83d9ae;
+  --status-pass-bg: #112d2c;
+  --status-fail: #f5a3aa;
+  --status-fail-bg: #30202d;
+  --status-warn: #eac285;
+  --status-warn-bg: #2c2830;
+  --status-info: var(--interactive-text);
+  --status-info-bg: #142945;
+  --status-blocked: var(--text-muted);
+  --status-blocked-bg: var(--surface-secondary);
+  --status-running: var(--interactive-text);
+  --status-running-bg: var(--status-info-bg);
+
+  /* Compatibility aliases keep all existing simulations on the same palette. */
+  --bg-primary: var(--background);
+  --bg-secondary: var(--surface);
+  --bg-surface: var(--surface);
+  --bg-elevated: var(--surface-secondary);
+  --bg-card: var(--surface-secondary);
+  --bg-hover: var(--surface-hover);
+  --border-primary: var(--border);
+  --border-secondary: var(--border-subtle);
+  --border-muted: var(--border-subtle);
+  --text-code: #cbd5e1;
+  --accent-blue: var(--interactive-text);
+  --accent-cyan: var(--interactive-text);
+  --accent-purple: var(--text-secondary);
+  --accent-violet: var(--text-secondary);
+  --accent-green: var(--status-pass);
+  --accent-red: var(--status-fail);
+  --accent-yellow: var(--status-warn);
+  --accent-orange: var(--status-warn);
+  --accent-blue-bg: var(--status-info-bg);
+  --success: var(--status-pass);
+  --warning: var(--status-warn);
+  --danger: var(--status-fail);
+  --ms-blue: var(--interactive-text);
+  --ms-blue-border: var(--border);
+  --ms-badge-bg: var(--status-info-bg);
+  --ms-surface: var(--surface-secondary);
+  --ms-border: var(--border);
+  --ms-radius: var(--radius);
+}
